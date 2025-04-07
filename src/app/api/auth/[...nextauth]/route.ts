@@ -5,9 +5,10 @@ import { User } from "../../../../../lib/db/models/user.model";
 import bcrypt from "bcryptjs";
 import { connectToMongoDB } from "../../../../../lib/db/connect";
 import { NextAuthOptions } from "next-auth";
+import { MongoClient } from "mongodb";
 
 export const authOptions: NextAuthOptions = {
-  adapter: MongoDBAdapter(connectToMongoDB() as Promise<any>),
+  adapter: MongoDBAdapter(connectToMongoDB() as Promise<MongoClient>),
   providers: [
     CredentialsProvider({
       name: "Credentials",
