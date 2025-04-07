@@ -1,16 +1,18 @@
 import { connectToMongoDB } from "../../../../../lib/db/connect";
 import { User } from "../../../../../lib/db/models/user.model";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../../../../../lib/auth-config";
 
-// Use the correct parameter type for App Router
-export async function GET(
-  request: Request,
-  context: { params: { id: string } }
-) {
+type RouteParams = {
+  params: {
+    id: string;
+  };
+};
+
+export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
-    const userId = context.params.id;
+    const userId = params.id;
 
     const session = await getServerSession(authOptions);
 
