@@ -1,3 +1,4 @@
+// lib/auth-config.ts
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { MongoDBAdapter } from "@auth/mongodb-adapter";
@@ -6,7 +7,6 @@ import { User } from "./db/models/user.model";
 import bcrypt from "bcryptjs";
 import { MongoClient } from "mongodb";
 
-// Define a proper return type for connectToMongoDB
 export const authOptions: NextAuthOptions = {
   adapter: MongoDBAdapter(connectToMongoDB() as Promise<MongoClient>),
   providers: [
