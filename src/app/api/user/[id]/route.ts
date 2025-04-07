@@ -2,7 +2,7 @@ import { connectToMongoDB } from "../../../../../lib/db/connect";
 import { User } from "../../../../../lib/db/models/user.model";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "../../auth/[...nextauth]/route";
+import { authOptions } from "../../../../../lib/auth-config";
 
 // First extract params in a non-async context
 export async function GET(
