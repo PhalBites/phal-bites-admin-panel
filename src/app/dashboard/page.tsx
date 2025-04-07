@@ -10,7 +10,8 @@ export default async function DashboardPage() {
           Welcome back, {user.name}
         </h2>
         <p className="text-gray-600">
-          Here's what's happening with your food delivery service today.
+          Here&apos;s what&apos;s happening with your food delivery service
+          today.
         </p>
       </div>
     </div>

@@ -1,7 +1,14 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 
 export interface UserState {
-  currentUser: any;
+  currentUser: {
+    id?: string;
+    name?: string;
+    email?: string;
+    role?: string;
+    department?: string;
+    phone?: string;
+  } | null;
   status: "idle" | "loading" | "succeeded" | "failed";
   error: string | null;
 }
@@ -32,7 +39,7 @@ const userSlice = createSlice({
   name: "user",
   initialState,
   reducers: {
-    setUser: (state, action: PayloadAction<any>) => {
+    setUser: (state, action: PayloadAction<UserState["currentUser"]>) => {
       state.currentUser = action.payload;
     },
     clearUser: (state) => {

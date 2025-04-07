@@ -2,7 +2,14 @@ import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 
 export interface AuthState {
   isAuthenticated: boolean;
-  user: any;
+  user: {
+    id?: string;
+    name?: string;
+    email?: string;
+    role?: string;
+    department?: string;
+    phone?: string;
+  } | null;
   status: "idle" | "loading" | "succeeded" | "failed";
   error: string | null;
 }
@@ -45,7 +52,7 @@ const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    setAuthUser: (state, action: PayloadAction<any>) => {
+    setAuthUser: (state, action: PayloadAction<AuthState["user"]>) => {
       state.isAuthenticated = true;
       state.user = action.payload;
     },

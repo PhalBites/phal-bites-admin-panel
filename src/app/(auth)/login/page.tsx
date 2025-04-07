@@ -8,7 +8,7 @@ import { setAuthUser } from "../../../../lib/redux/slices/authSlice";
 import { useSession } from "next-auth/react";
 
 export default function LoginPage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("from") || "/dashboard";

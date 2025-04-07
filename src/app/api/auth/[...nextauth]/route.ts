@@ -7,7 +7,7 @@ import { connectToMongoDB } from "../../../../../lib/db/connect";
 import { NextAuthOptions } from "next-auth";
 
 export const authOptions: NextAuthOptions = {
-  adapter: MongoDBAdapter(connectToMongoDB() as any),
+  adapter: MongoDBAdapter(connectToMongoDB() as Promise<any>),
   providers: [
     CredentialsProvider({
       name: "Credentials",
