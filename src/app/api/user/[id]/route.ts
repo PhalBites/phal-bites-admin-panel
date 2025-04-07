@@ -4,14 +4,11 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../../../../../lib/auth-config";
 
-// First extract params in a non-async context
 export async function GET(
   request: Request,
-  context: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
   try {
-    // Await the params object before destructuring
-    const params = await context.params;
     const userId = params.id;
 
     const session = await getServerSession(authOptions);
