@@ -39,7 +39,7 @@ export const navItems = [
     ),
   },
   {
-    href: "/dashboard/franchises",
+    href: "/dashboard/components/franchise",
     label: "Franchises",
     icon: (
       <svg
