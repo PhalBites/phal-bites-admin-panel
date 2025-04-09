@@ -1,8 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useEffect, useState, useRef } from "react";
-import { Loader } from "@googlemaps/js-api-loader";
+import { useEffect, useRef, useState } from "react";
 import { mapsLoader } from "../../../../../../lib/maps-loader";
 
 interface FranchiseDetail {
@@ -35,7 +34,7 @@ export default function FranchiseDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const mapRef = useRef<HTMLDivElement>(null);
-  const [map, setMap] = useState<google.maps.Map | null>(null);
+  const mapInstance = useRef<google.maps.Map | null>(null);
 
   useEffect(() => {
     const fetchFranchise = async () => {
@@ -43,8 +42,10 @@ export default function FranchiseDetailPage() {
         const response = await fetch(`/api/franchise/${id}`);
         if (!response.ok) throw new Error("Failed to fetch franchise");
         setFranchise(await response.json());
-      } catch (err) {
-        setError(err.message);
+      } catch (err: unknown) {
+        setError(
+          err instanceof Error ? err.message : "Failed to fetch franchise"
+        );
       } finally {
         setLoading(false);
       }
@@ -55,9 +56,8 @@ export default function FranchiseDetailPage() {
   useEffect(() => {
     if (!franchise || !mapRef.current) return;
 
-    let map: google.maps.Map;
-    let markers: google.maps.Marker[] = [];
-    let polygons: google.maps.Polygon[] = [];
+    const markers: google.maps.Marker[] = [];
+    const polygons: google.maps.Polygon[] = [];
 
     const initMap = async () => {
       try {
@@ -68,11 +68,19 @@ export default function FranchiseDetailPage() {
           lng: franchise.location.coordinates[0],
         };
 
-        map = new google.maps.Map(mapRef.current!, {
+        const map = new google.maps.Map(mapRef.current!, {
           center: location,
           zoom: 12,
           mapTypeId: google.maps.MapTypeId.ROADMAP,
         });
+
+        mapInstance.current = map;
+
+        // Create bounds to include all points
+        const bounds = new google.maps.LatLngBounds();
+
+        // Add franchise location to bounds
+        bounds.extend(new google.maps.LatLng(location.lat, location.lng));
 
         // Add marker
         markers.push(
@@ -90,6 +98,11 @@ export default function FranchiseDetailPage() {
             lng: coord[0],
           }));
 
+          // Add each path point to bounds
+          paths.forEach((point) => {
+            bounds.extend(new google.maps.LatLng(point.lat, point.lng));
+          });
+
           const polygon = new google.maps.Polygon({
             paths,
             map,
@@ -101,6 +114,12 @@ export default function FranchiseDetailPage() {
 
           polygons.push(polygon);
         });
+
+        // Adjust map to fit all markers and zones
+        if (franchise.deliveryZones.length > 0) {
+          // Add a small padding
+          map.fitBounds(bounds, { top: 30, right: 30, bottom: 30, left: 30 });
+        }
       } catch (error) {
         console.error("Error initializing map:", error);
         setError("Failed to load map");
@@ -113,7 +132,10 @@ export default function FranchiseDetailPage() {
       // Cleanup
       markers.forEach((marker) => marker.setMap(null));
       polygons.forEach((polygon) => polygon.setMap(null));
-      if (map) google.maps.event.clearInstanceListeners(map);
+      if (mapInstance.current) {
+        google.maps.event.clearInstanceListeners(mapInstance.current);
+        mapInstance.current = null;
+      }
     };
   }, [franchise]);
 

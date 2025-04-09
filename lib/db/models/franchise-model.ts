@@ -1,9 +1,9 @@
 import mongoose, { Schema, Document } from "mongoose";
 
-interface IGeoZone {
-  type: "Polygon";
-  coordinates: number[][][]; // Array of coordinate arrays
-}
+// interface IGeoZone {
+//   type: "Polygon";
+//   coordinates: number[][][]; // Array of coordinate arrays
+// }
 
 interface IDeliveryZone {
   name: string;

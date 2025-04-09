@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { FranchiseMap } from "./FranchiseMap";
+import { DeliveryZone } from "../../../../../lib/DeliveryZone";
 
 export function FranchiseForm() {
   const router = useRouter();
@@ -22,7 +23,7 @@ export function FranchiseForm() {
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(
     null
   );
-  const [zones, setZones] = useState<any[]>([]);
+  const [zones, setZones] = useState<DeliveryZone[]>([]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -76,7 +77,7 @@ export function FranchiseForm() {
             phone: formData.contact.phone,
             email: formData.contact.email,
           },
-          contactNumber: formData.contact.phone, // Add this line
+          contactNumber: formData.contact.phone,
           location: {
             type: "Point",
             coordinates: [location.lng, location.lat],
@@ -88,7 +89,7 @@ export function FranchiseForm() {
             area: {
               type: "Polygon",
               coordinates: [
-                zone.coordinates.map((coord: any) => [coord.lng, coord.lat]),
+                zone.coordinates.map((coord) => [coord.lng, coord.lat]),
               ],
             },
           })),
@@ -101,8 +102,10 @@ export function FranchiseForm() {
       }
 
       router.push("/dashboard/components/franchise");
-    } catch (err) {
-      setError(err.message || "Failed to create franchise");
+    } catch (err: unknown) {
+      setError(
+        err instanceof Error ? err.message : "Failed to create franchise"
+      );
     } finally {
       setLoading(false);
     }

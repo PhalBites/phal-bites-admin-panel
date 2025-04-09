@@ -4,7 +4,7 @@ import { authOptions } from "../../../../lib/auth-config";
 import { connectToMongoDB } from "../../../../lib/db/connect";
 import { Franchise } from "../../../../lib/db/models/franchise-model";
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     await connectToMongoDB();
     const session = await getServerSession(authOptions);

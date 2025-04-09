@@ -1,17 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { DeliveryZone, ZoneType } from "../../../../../lib/DeliveryZone";
 import { mapsLoader } from "../../../../../lib/maps-loader";
-import { Loader } from "@googlemaps/js-api-loader";
-
-type ZoneType = "free" | "paid";
-
-interface DeliveryZone {
-  name: string;
-  zoneType: ZoneType;
-  deliveryFee?: number;
-  coordinates: google.maps.LatLngLiteral[];
-}
 
 export function FranchiseMap({
   city,
@@ -34,12 +25,59 @@ export function FranchiseMap({
   const [searchInput, setSearchInput] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
 
+  const updateZone = useCallback(
+    (polygon: google.maps.Polygon, zone: DeliveryZone) => {
+      const path = polygon.getPath();
+      const coordinates: google.maps.LatLngLiteral[] = [];
+
+      path.getArray().forEach((latLng) => {
+        coordinates.push({ lat: latLng.lat(), lng: latLng.lng() });
+      });
+
+      setZones((prevZones) => {
+        const updatedZones = prevZones.map((z) => {
+          if (z.name === zone.name) {
+            return { ...z, coordinates };
+          }
+          return z;
+        });
+        onZonesSet(updatedZones);
+        return updatedZones;
+      });
+    },
+    [onZonesSet]
+  );
+
+  const handleZoneTypeChange = (type: ZoneType) => {
+    setCurrentZoneType(type);
+    if (drawingManager) {
+      drawingManager.setOptions({
+        polygonOptions: {
+          fillColor: type === "free" ? "#3b82f6" : "#10b981",
+          strokeColor: type === "free" ? "#1d4ed8" : "#059669",
+        },
+      });
+    }
+  };
+
+  const removeZone = (index: number) => {
+    const newZones = [...zones];
+    newZones.splice(index, 1);
+    setZones(newZones);
+
+    const polygon = polygons[index];
+    if (polygon) {
+      polygon.setMap(null);
+      const newPolygons = [...polygons];
+      newPolygons.splice(index, 1);
+      setPolygons(newPolygons);
+    }
+
+    onZonesSet(newZones);
+  };
+
   useEffect(() => {
-    const loader = new Loader({
-      apiKey: "AIzaSyD_xex28kszrej4Al0WtKbn3cQaMkxCpVY",
-      version: "weekly",
-      libraries: ["drawing", "places"],
-    });
+    if (!city) return;
 
     mapsLoader.load().then(() => {
       const geocoder = new google.maps.Geocoder();
@@ -52,32 +90,34 @@ export function FranchiseMap({
             mapTypeId: google.maps.MapTypeId.ROADMAP,
           });
 
-          const searchBox = new google.maps.places.SearchBox(
-            searchInputRef.current!
-          );
+          if (searchInputRef.current) {
+            const searchBox = new google.maps.places.SearchBox(
+              searchInputRef.current
+            );
 
-          newMap.addListener("bounds_changed", () => {
-            searchBox.setBounds(newMap.getBounds()!);
-          });
-
-          searchBox.addListener("places_changed", () => {
-            const places = searchBox.getPlaces();
-            if (places?.length === 0) return;
-
-            // Recenter map to first place
-            const bounds = new google.maps.LatLngBounds();
-            places?.forEach((place) => {
-              if (!place.geometry?.location) return;
-              bounds.extend(place.geometry.location);
-
-              if (place.geometry.viewport) {
-                newMap.fitBounds(place.geometry.viewport);
-              } else {
-                newMap.setCenter(place.geometry.location);
-                newMap.setZoom(17);
-              }
+            newMap.addListener("bounds_changed", () => {
+              searchBox.setBounds(newMap.getBounds()!);
             });
-          });
+
+            searchBox.addListener("places_changed", () => {
+              const places = searchBox.getPlaces();
+              if (places?.length === 0) return;
+
+              // Recenter map to first place
+              const bounds = new google.maps.LatLngBounds();
+              places?.forEach((place) => {
+                if (!place.geometry?.location) return;
+                bounds.extend(place.geometry.location);
+
+                if (place.geometry.viewport) {
+                  newMap.fitBounds(place.geometry.viewport);
+                } else {
+                  newMap.setCenter(place.geometry.location);
+                  newMap.setZoom(17);
+                }
+              });
+            });
+          }
 
           setMap(newMap);
 
@@ -161,12 +201,15 @@ export function FranchiseMap({
               polygon
                 .getPath()
                 .addListener("insert_at", () => updateZone(polygon, newZone));
-              polygon.addListener("rightclick", (e: any) => {
-                if (e.vertex !== undefined) {
-                  path.removeAt(e.vertex);
-                  updateZone(polygon, newZone);
+              polygon.addListener(
+                "rightclick",
+                (e: google.maps.PolyMouseEvent) => {
+                  if (e.vertex !== undefined) {
+                    path.removeAt(e.vertex);
+                    updateZone(polygon, newZone);
+                  }
                 }
-              });
+              );
             }
           );
         }
@@ -184,54 +227,14 @@ export function FranchiseMap({
         google.maps.event.clearInstanceListeners(map);
       }
     };
-  }, [city, currentZoneType]);
-
-  const updateZone = (polygon: google.maps.Polygon, zone: DeliveryZone) => {
-    const path = polygon.getPath();
-    const coordinates: google.maps.LatLngLiteral[] = [];
-
-    path.getArray().forEach((latLng) => {
-      coordinates.push({ lat: latLng.lat(), lng: latLng.lng() });
-    });
-
-    const updatedZones = zones.map((z) => {
-      if (z.name === zone.name) {
-        return { ...z, coordinates };
-      }
-      return z;
-    });
-
-    setZones(updatedZones);
-    onZonesSet(updatedZones);
-  };
-
-  const handleZoneTypeChange = (type: ZoneType) => {
-    setCurrentZoneType(type);
-    if (drawingManager) {
-      drawingManager.setOptions({
-        polygonOptions: {
-          fillColor: type === "free" ? "#3b82f6" : "#10b981",
-          strokeColor: type === "free" ? "#1d4ed8" : "#059669",
-        },
-      });
-    }
-  };
-
-  const removeZone = (index: number) => {
-    const newZones = [...zones];
-    newZones.splice(index, 1);
-    setZones(newZones);
-
-    const polygon = polygons[index];
-    if (polygon) {
-      polygon.setMap(null);
-      const newPolygons = [...polygons];
-      newPolygons.splice(index, 1);
-      setPolygons(newPolygons);
-    }
-
-    onZonesSet(newZones);
-  };
+  }, [
+    city,
+    currentZoneType,
+    onLocationSet,
+    onZonesSet,
+    deliveryFee,
+    updateZone,
+  ]);
 
   return (
     <div className="space-y-4">
