@@ -15,15 +15,36 @@ export function FranchiseMap({
 }) {
   const mapRef = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<google.maps.Map | null>(null);
+  const mapInstanceRef = useRef<google.maps.Map | null>(null);
+
   const [drawingManager, setDrawingManager] =
     useState<google.maps.drawing.DrawingManager | null>(null);
+  const drawingManagerRef = useRef<google.maps.drawing.DrawingManager | null>(
+    null
+  );
+
   const [currentZoneType, setCurrentZoneType] = useState<ZoneType>("free");
   const [deliveryFee, setDeliveryFee] = useState<number>(50);
   const [zones, setZones] = useState<DeliveryZone[]>([]);
+  const zonesRef = useRef<DeliveryZone[]>([]);
+
   const [marker, setMarker] = useState<google.maps.Marker | null>(null);
+  const markerRef = useRef<google.maps.Marker | null>(null);
+
   const [polygons, setPolygons] = useState<google.maps.Polygon[]>([]);
+  const polygonsRef = useRef<google.maps.Polygon[]>([]);
+
   const [searchInput, setSearchInput] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Keep refs in sync with state
+  useEffect(() => {
+    mapInstanceRef.current = map;
+    drawingManagerRef.current = drawingManager;
+    markerRef.current = marker;
+    polygonsRef.current = polygons;
+    zonesRef.current = zones;
+  }, [map, drawingManager, marker, polygons, zones]);
 
   const updateZone = useCallback(
     (polygon: google.maps.Polygon, zone: DeliveryZone) => {
@@ -79,9 +100,14 @@ export function FranchiseMap({
   useEffect(() => {
     if (!city) return;
 
+    let cleanup = false;
+
     mapsLoader.load().then(() => {
+      if (cleanup) return;
+
       const geocoder = new google.maps.Geocoder();
       geocoder.geocode({ address: city }, (results, status) => {
+        if (cleanup) return;
         if (status === "OK" && results?.[0]?.geometry?.location) {
           const location = results[0].geometry.location;
           const newMap = new google.maps.Map(mapRef.current!, {
@@ -120,6 +146,7 @@ export function FranchiseMap({
           }
 
           setMap(newMap);
+          mapInstanceRef.current = newMap;
 
           // Initialize drawing manager
           const newDrawingManager = new google.maps.drawing.DrawingManager({
@@ -141,6 +168,7 @@ export function FranchiseMap({
 
           newDrawingManager.setMap(newMap);
           setDrawingManager(newDrawingManager);
+          drawingManagerRef.current = newDrawingManager;
 
           // Add marker for franchise location
           const newMarker = new google.maps.Marker({
@@ -151,6 +179,7 @@ export function FranchiseMap({
           });
 
           setMarker(newMarker);
+          markerRef.current = newMarker;
           onLocationSet({ lat: location.lat(), lng: location.lng() });
 
           // Listen for marker drag end
@@ -173,9 +202,10 @@ export function FranchiseMap({
                 coordinates.push({ lat: latLng.lat(), lng: latLng.lng() });
               });
 
+              const currentZones = zonesRef.current;
               const newZone: DeliveryZone = {
                 name: `${currentZoneType === "free" ? "Free" : "Paid"} Zone ${
-                  zones.length + 1
+                  currentZones.length + 1
                 }`,
                 zoneType: currentZoneType,
                 deliveryFee:
@@ -183,9 +213,13 @@ export function FranchiseMap({
                 coordinates,
               };
 
-              const updatedZones = [...zones, newZone];
+              const updatedZones = [...currentZones, newZone];
               setZones(updatedZones);
-              setPolygons((prev) => [...prev, polygon]);
+              setPolygons((prev) => {
+                const updated = [...prev, polygon];
+                polygonsRef.current = updated;
+                return updated;
+              });
               onZonesSet(updatedZones);
 
               // Change polygon style based on zone type
@@ -217,14 +251,23 @@ export function FranchiseMap({
     });
 
     return () => {
-      polygons.forEach((polygon) => {
-        google.maps.event.clearInstanceListeners(polygon);
-        polygon.setMap(null);
-      });
-      if (marker) marker.setMap(null);
-      if (drawingManager) drawingManager.setMap(null);
-      if (map) {
-        google.maps.event.clearInstanceListeners(map);
+      cleanup = true;
+      const currentPolygons = polygonsRef.current;
+      const currentMarker = markerRef.current;
+      const currentDrawingManager = drawingManagerRef.current;
+      const currentMap = mapInstanceRef.current;
+
+      if (currentPolygons.length > 0) {
+        currentPolygons.forEach((polygon) => {
+          google.maps.event.clearInstanceListeners(polygon);
+          polygon.setMap(null);
+        });
+      }
+
+      if (currentMarker) currentMarker.setMap(null);
+      if (currentDrawingManager) currentDrawingManager.setMap(null);
+      if (currentMap) {
+        google.maps.event.clearInstanceListeners(currentMap);
       }
     };
   }, [

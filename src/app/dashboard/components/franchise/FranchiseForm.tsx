@@ -137,7 +137,7 @@ export function FranchiseForm() {
                 value={formData.name}
                 onChange={handleChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 text-black placeholder-black"
               />
             </div>
 
@@ -154,7 +154,7 @@ export function FranchiseForm() {
                 value={formData.address}
                 onChange={handleChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 text-black placeholder-black"
               />
             </div>
 
@@ -171,7 +171,7 @@ export function FranchiseForm() {
                 value={formData.city}
                 onChange={handleChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 text-black placeholder-black"
               />
             </div>
 
@@ -188,7 +188,7 @@ export function FranchiseForm() {
                 value={formData.state}
                 onChange={handleChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 text-black placeholder-black"
               >
                 <option value="">Select state</option>
                 <option value="Andhra Pradesh">Andhra Pradesh</option>
@@ -213,7 +213,7 @@ export function FranchiseForm() {
                 value={formData.contact.phone}
                 onChange={handleChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 text-black placeholder-black"
               />
             </div>
 
@@ -231,7 +231,7 @@ export function FranchiseForm() {
                 value={formData.contact.email}
                 onChange={handleChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 text-black placeholder-black"
               />
             </div>
           </div>

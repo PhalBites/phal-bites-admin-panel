@@ -87,7 +87,7 @@ export function FranchiseList() {
           alignItems: "center",
         }}
       >
-        <h2 style={{ fontSize: "1.25rem", fontWeight: "600" }}>
+        <h2 style={{ fontSize: "1.25rem", fontWeight: "600", color: "#000" }}>
           All Franchises
         </h2>
         <Link href="/dashboard/components/franchise/new">
